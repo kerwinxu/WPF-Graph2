@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using System.Xml.Linq;
 
 namespace Chart
 {
@@ -108,11 +110,11 @@ namespace Chart
             this.xAxisArea = Template.FindName("PART_XAXIS", this) as Canvas;
             this.yAxisArea = Template.FindName("PART_YAXIS", this) as Canvas;
             this.xAxis = new Axis(new LogaritmicMapper(this.chartArea), AxisOrigin.X);
-            this.xAxis.Min = 125;
-            this.xAxis.Max = 10_000;
+            //this.xAxis.Min = 125;
+            //this.xAxis.Max = 10_000;
             this.yAxis = new Axis(new PointMapper(this.chartArea), AxisOrigin.Y);
-            this.yAxis.Min = 0;
-            this.yAxis.Max = 120;
+            //this.yAxis.Min = 0;
+            //this.yAxis.Max = 120;
 
             ReDrawAll();
         }
@@ -171,63 +173,166 @@ namespace Chart
             return this.drawingSelector[item.ChartType].Draw(item, this.xAxis, this.yAxis, Side);
         }
 
+
+        #region 这里做x轴刻度的
+
+        /// <summary>
+        ///  x轴的刻度值
+        /// </summary>
+        public IEnumerable LegendPoints
+        {
+            get { return (IEnumerable)GetValue(LegendPointsProperty); }
+            set { SetValue(LegendPointsProperty, value); }
+        }
+        public static readonly DependencyProperty LegendPointsProperty = DependencyProperty.Register(
+            "LegendPoints",
+            typeof(IEnumerable),
+            typeof(ChartControl),
+            new PropertyMetadata(null, OnLegendPointsChanged));
+
+        private static void OnLegendPointsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((ChartControl)d).UpdateCurves();
+        }
+
+        /// <summary>
+        ///  x轴的刻度字符串
+        /// </summary>
+        public IEnumerable LegendText
+        {
+            get { return (IEnumerable)GetValue(LegendTextProperty); }
+            set { SetValue(LegendTextProperty, value); }
+        }
+        public static readonly DependencyProperty LegendTextProperty = DependencyProperty.Register(
+            "LegendText",
+            typeof(IEnumerable),
+            typeof(ChartControl),
+            new PropertyMetadata(null, OnLegendTextPropertyChanged));
+
+        private static void OnLegendTextPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((ChartControl)d).UpdateCurves();
+        }
+
+
+        #endregion
+
+
+        #region y轴上的刻度
+
+        /// <summary>
+        ///  y轴的刻度
+        /// </summary>
+        public IEnumerable YPoints
+        {
+            get { return (IEnumerable)GetValue(YPointsProperty); }
+            set { SetValue(YPointsProperty, value); }
+        }
+        public static readonly DependencyProperty YPointsProperty = DependencyProperty.Register(
+            "YPoints",
+            typeof(IEnumerable),
+            typeof(ChartControl),
+            new PropertyMetadata(null, OnYPointsPropertyChanged));
+
+        private static void OnYPointsPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((ChartControl)d).UpdateCurves();
+        }
+
+
+        #endregion
+
+
+
         private void DrawLegend()
         {
-            var ypoints = new List<double>();
-            for (int i= (int)this.yAxis.Min; i<= yAxis.Max; i+=10)
+            //var ypoints = new List<double>();
+            //for (int i= (int)this.yAxis.Min; i<= yAxis.Max; i+=10)
+            //{
+            //    ypoints.Add(i);
+            //}
+            //var screenYs = this.yAxis.Map(ypoints.ToArray());
+            
+            // y轴是一定有东西的。
+            if (YPoints is IEnumerable<double> ypoints2)
             {
-                ypoints.Add(i);
-            }
-            var screenYs = this.yAxis.Map(ypoints.ToArray());
-            for (int i =0; i< screenYs.Length; i++)
-            {
-                var line = new Line();
-                line.X1 = 0;
-                line.X2 = this.chartArea.ActualWidth;
-                line.Y1 = screenYs[i];
-                line.Y2 = screenYs[i];
-                line.Stroke = new SolidColorBrush(Colors.Black);
-                line.StrokeThickness = 0.5;
-                this.chartArea.Children.Add(line);
 
-                if (i > 0 && i < screenYs.Length)
+                var ypoints = new List<double>();
+                ypoints.AddRange(ypoints2);
+                this.yAxis.Min = ypoints.Min();
+                this.yAxis.Max = ypoints.Max();
+                var screenYs = this.yAxis.Map(ypoints.ToArray());
+                for (int i = 0; i < screenYs.Length; i++)
                 {
-                    var ypos = screenYs[i-1] + (screenYs[i] - screenYs[i - 1])/2.0;
-                    var minorline = new Line();
-                    minorline.StrokeDashArray = new DoubleCollection(new []{ 3.0, 3.0 });
-                    minorline.X1 = 0;
-                    minorline.X2 = this.chartArea.ActualWidth;
-                    minorline.Y1 = ypos;
-                    minorline.Y2 = ypos;
-                    minorline.Stroke = new SolidColorBrush(Colors.DarkGray);
-                    minorline.StrokeThickness = 1;
-                    this.chartArea.Children.Add(minorline);
+                    var line = new Line();
+                    line.X1 = 0;
+                    line.X2 = this.chartArea.ActualWidth;
+                    line.Y1 = screenYs[i];
+                    line.Y2 = screenYs[i];
+                    line.Stroke = new SolidColorBrush(Colors.Black);
+                    line.StrokeThickness = 0.5;
+                    this.chartArea.Children.Add(line);
+
+                    if (i > 0 && i < screenYs.Length)
+                    {
+                        var ypos = screenYs[i - 1] + (screenYs[i] - screenYs[i - 1]) / 2.0;
+                        var minorline = new Line();
+                        minorline.StrokeDashArray = new DoubleCollection(new[] { 3.0, 3.0 });
+                        minorline.X1 = 0;
+                        minorline.X2 = this.chartArea.ActualWidth;
+                        minorline.Y1 = ypos;
+                        minorline.Y2 = ypos;
+                        minorline.Stroke = new SolidColorBrush(Colors.DarkGray);
+                        minorline.StrokeThickness = 1;
+                        this.chartArea.Children.Add(minorline);
+                    }
+
+                    var tb = new TextBlock { Width = 20, HorizontalAlignment = HorizontalAlignment.Right, TextAlignment = TextAlignment.Center, FontFamily = new FontFamily("Consolas"), Text = ypoints[i].ToString(), RenderTransformOrigin = new Point(0.5, 0.5) };
+                    Canvas.SetTop(tb, screenYs[i] - 8);
+                    this.yAxisArea.Children.Add(tb);
                 }
+                // 要判断是否有这个值。
+                if (LegendPoints is IEnumerable<double> legendPoints)
+                {
+                    //var legendPoints = new[] { 125.0, 250, 500, 750, 1000, 2000, 3000, 5000, 8000, 10_000 };
+                    //var legendText = new[] { "125", "250", "500", "750", "1k", "2k", "3k", "5k", "8k", "10k" };
+                    // 要判断是否有这个值
+                    string[] legendText = null;
+                    if (LegendText is IEnumerable<string>)
+                    {
+                        legendText = LegendText as string[];
+                    }
+                    else
+                    {
+                        legendText = legendPoints.Select(x => x.ToString()).ToArray();
+                    }
 
-                var tb = new TextBlock { Width = 20, HorizontalAlignment = HorizontalAlignment.Right, TextAlignment = TextAlignment.Center, FontFamily = new FontFamily("Consolas"), Text = ypoints[i].ToString(), RenderTransformOrigin = new Point(0.5, 0.5) };
-                Canvas.SetTop(tb, screenYs[i] - 8);
-                this.yAxisArea.Children.Add(tb);
+
+                    this.xAxis.Min = legendPoints.Min();
+                    this.xAxis.Max = legendPoints.Max();
+                    var screenPoints = this.xAxis.Map(legendPoints.ToArray());
+
+                    for (int i = 0; i < legendPoints.Count(); i++)
+                    {
+                        var line = new Line();
+                        line.X1 = screenPoints[i];
+                        line.X2 = screenPoints[i];
+                        line.Y1 = 0;
+                        line.Y2 = screenYs[screenYs.Length - 1];
+                        line.Stroke = new SolidColorBrush(Colors.Black);
+                        line.StrokeThickness = 0.5;
+                        this.chartArea.Children.Add(line);
+
+                        var tb = new TextBlock { Width = 20, HorizontalAlignment = HorizontalAlignment.Center, TextAlignment = TextAlignment.Center, FontFamily = new FontFamily("Consolas"), Text = legendText[i], RenderTransformOrigin = new Point(0.5, 0.5) };
+                        Canvas.SetLeft(tb, screenPoints[i] - 10);
+                        this.xAxisArea.Children.Add(tb);
+                    }
+                }
             }
 
-            var legendPoints = new[] { 125.0, 250, 500, 750, 1000, 2000, 3000, 5000, 8000, 10_000 };
-            var legendText = new[] { "125", "250", "500", "750", "1k", "2k", "3k", "5k", "8k", "10k" };
-            var screenPoints = this.xAxis.Map(legendPoints);
 
-            for (int i = 0; i < legendPoints.Length; i++)
-            {
-                var line = new Line();
-                line.X1 = screenPoints[i];
-                line.X2 = screenPoints[i];
-                line.Y1 = 0;
-                line.Y2 = screenYs[screenYs.Length-1];
-                line.Stroke = new SolidColorBrush(Colors.Black);
-                line.StrokeThickness = 0.5;
-                this.chartArea.Children.Add(line);
-
-                var tb = new TextBlock { Width = 20, HorizontalAlignment = HorizontalAlignment.Center, TextAlignment = TextAlignment.Center, FontFamily = new FontFamily("Consolas"), Text = legendText[i], RenderTransformOrigin = new Point(0.5, 0.5) };
-                Canvas.SetLeft(tb, screenPoints[i] - 10);
-                this.xAxisArea.Children.Add(tb);
-            }
+           
+           
         }
 
         private class Host : FrameworkElement

@@ -19,6 +19,30 @@ namespace Chart
         /// </summary>
         public ObservableCollection<Curve> Curves { get; set; }
 
+        public double[] LegendPoints
+        {
+            get
+            {
+                return new[] { 125.0, 250, 500, 750, 1000, 2000, 3000, 5000, 8000, 10_000 };
+            }
+        }
+       
+
+        public string[] LegendText { 
+            get 
+            { 
+                return new[] { "125", "250", "500", "750", "1k", "2k", "3k", "5k", "8k", "10k" }; 
+            } 
+        }
+
+        public double[] YPoints
+        {
+            get
+            {
+                return new[] { 0.0,10,20,30,40,50,60,70,80,90,100,110,120 };
+            }
+        }
+
         public string FrameRate { get; set; }
 
         public string NumberOfRenderedPoints { get; set; }

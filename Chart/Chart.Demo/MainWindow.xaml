@@ -22,6 +22,9 @@
         <local:ChartControl
             Margin="20"
             CurvesSource="{Binding Curves}"
+            LegendPoints="{Binding LegendPoints}"
+            LegendText="{ Binding LegendText}"
+            YPoints ="{Binding YPoints}"
             Side="Right">
             <!-- 如下的应该是创建一个模板，这个绘图可以定义内部的显示 -->
             <local:ChartControl.Template>
@@ -85,6 +88,9 @@
             Grid.Column="2"
             Margin="20"
             CurvesSource="{Binding Curves}"
+            LegendPoints="{Binding LegendPoints}"
+            LegendText="{ Binding LegendText}"
+            YPoints ="{Binding YPoints}"
             Side="Left">
             <local:ChartControl.Template>
                 <ControlTemplate TargetType="{x:Type local:ChartControl}">
