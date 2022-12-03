@@ -23,9 +23,12 @@
             Margin="20"
             CurvesSource="{Binding Curves}"
             Side="Right">
+            <!-- 如下的应该是创建一个模板，这个绘图可以定义内部的显示 -->
             <local:ChartControl.Template>
+                <!-- 目标类型 -->
                 <ControlTemplate TargetType="{x:Type local:ChartControl}">
                     <Grid>
+                        <!-- 两行两列的表格 -->
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="20" />
                             <ColumnDefinition />
@@ -34,6 +37,7 @@
                             <RowDefinition />
                             <RowDefinition Height="20" />
                         </Grid.RowDefinitions>
+                        <!--外层的边界框-->
                         <Border
                             Grid.RowSpan="2"
                             Grid.ColumnSpan="2"
@@ -42,6 +46,7 @@
                             BorderThickness="1"
                             CornerRadius="10"
                             Opacity="0.5" />
+                        <!--只是绘图的边界框。-->
                         <Border
                             Grid.Column="1"
                             Margin="20"
@@ -50,6 +55,7 @@
                             BorderThickness="1"
                             ClipToBounds="True"
                             CornerRadius="10">
+                            <!-- 绘图的画布 -->
                             <Canvas
                                 x:Name="PART_CHART"
                                 Grid.Column="1"
@@ -57,11 +63,13 @@
                                 ClipToBounds="True" />
                         </Border>
 
+                        <!-- x轴 -->
                         <Canvas
                             x:Name="PART_XAXIS"
                             Grid.Row="1"
                             Grid.Column="1"
                             Margin="20,0,20,0" />
+                        <!--y轴 -->
                         <Canvas
                             x:Name="PART_YAXIS"
                             Grid.Row="0"

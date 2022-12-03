@@ -9,8 +9,14 @@ namespace Chart
 {
     public class ViewModel : INotifyPropertyChanged
     {
+        /// <summary>
+        /// 定时器的
+        /// </summary>
         private DispatcherTimer dt = new DispatcherTimer();
 
+        /// <summary>
+        /// 曲线来源，
+        /// </summary>
         public ObservableCollection<Curve> Curves { get; set; }
 
         public string FrameRate { get; set; }
@@ -34,18 +40,18 @@ namespace Chart
         public ViewModel()
         {
             Curves = new ObservableCollection<Curve>();
-            AddLimits();
-            AddArea("first");
+            AddLimits();             // 上限，实质上是用添加区域实现的。
+            AddArea("first");        // 添加区域
             AddArea("second");
             AddArea("third");
-            AddCurve();
+            AddCurve();              // 添加曲线。
             AddCurve();
             AddCurve();
             AddCurve();
             AddCurve();
             AddCurve();
             AddOther();
-            AddBarCurve();
+            AddBarCurve();           // 添加条，
             this.dt = new DispatcherTimer();
             this.dt.Interval = TimeSpan.FromMilliseconds(intervalMs);
             this.dt.Tick += OnTick;
@@ -64,6 +70,9 @@ namespace Chart
             Curves.Add(new Curve(fs, vs, ChartType.Bar) { CurveName = "MyBars" });
         }
 
+        /// <summary>
+        /// 添加限制
+        /// </summary>
         private void AddLimits()
         {
             var fs = new[] { 125.0, 250, 500, 750, 1000, 2000, 3000, 5000, 7000, 8000, 10_000 };
@@ -71,7 +80,9 @@ namespace Chart
             var vs_up = new[] { 0.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
             Curves.Add(new AreaCurve(fs, vs_up, fs, vs, ChartType.Area) { CurveName = "TopLimit" });
         }
-
+        /// <summary>
+        /// 添加曲线
+        /// </summary>
         private void AddCurve()
         {
             var pointsCount = Frequencies.Length;
@@ -85,6 +96,10 @@ namespace Chart
             Curves.Add(new Curve(f, v, ChartType.Line));
         }
 
+        /// <summary>
+        /// 添加区域，上下两条线围起来的作为一个区域。
+        /// </summary>
+        /// <param name="name"></param>
         private void AddArea(string name)
         {
             var pointsCount = Frequencies.Length;
